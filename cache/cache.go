@@ -64,16 +64,24 @@ func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
 
 func (r RedisCacheService) Delete(key string) error {
 	now := strconv.FormatInt(time.Now().UnixNano(), 10)
+	// find expired timestamp entries
 	var result[] string
 	if err := r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key +":ttl", "-inf", now)); err != nil {
 		return err
 	}
 
-	if err := r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key +":ttl", "-inf", now)); err != nil {
-		return err
+	if len(result) > 0 {
+		// remove expired timestamp entries
+		if err := r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key +":ttl", "-inf", now)); err != nil {
+			return err
+		}
+		// remove equivalent delta entries
+		min := result[0]
+		max := result[len(result)-1]
+		log.Printf("Removing expired entries for %s in range %s to %s\n", key, min, max)
+		return r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key, min, max))
+	} else {
+		log.Printf("No expired entries for %s\n", key)
+		return nil
 	}
-	min := result[0]
-	max := result[len(result)-1]
-	log.Printf("Removing expired entries for %s in range %s to %s\n", key, min, max)
-	return r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key, min, max))
 }
