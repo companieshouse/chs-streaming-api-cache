@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+const (
+	ZADD = "ZADD"
+	ZRANGEBYSCORE = "ZRANGEBYSCORE"
+	ZREMRANGEBYSCORE = "ZREMRANGEBYSCORE"
+)
+
 type CacheService interface {
 	// Insert new entities into sorted sets with the offset number as the score
 	Create(key string, delta string, score int64) error
@@ -37,19 +43,19 @@ func (r RedisCacheService) Create(key string, delta string, score int64) error {
 	log.Printf("Creating new cache entry for key=%s", key)
 
 	offset := strconv.FormatInt(score, 10)
-	err := r.pool.Do(radix.Cmd(nil, "ZADD", key, offset, delta))
+	err := r.pool.Do(radix.Cmd(nil, ZADD, key, offset, delta))
 	if err != nil {
 		return err
 	}
 	log.Printf("Creating time to live cache entry for key=%s and offset=%s", key, offset)
 	timestamp := strconv.FormatInt(time.Now().UnixNano() + int64(time.Nanosecond * time.Second * r.expiryInSeconds), 10)
-	return r.pool.Do(radix.Cmd(nil, "ZADD", key+":ttl", timestamp, offset))
+	return r.pool.Do(radix.Cmd(nil, ZADD, key+":ttl", timestamp, offset))
 }
 
 func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
 	log.Printf("Retrieving cache entries for key=%s and offset=%d", key, offset)
 	var result []string
-	var err = r.pool.Do(radix.Cmd(&result, "ZRANGEBYSCORE", key, "0", strconv.FormatInt(offset, 10)))
+	var err = r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key, "0", strconv.FormatInt(offset, 10)))
 	if err == nil{
 		log.Printf("Retrieved %d cached entries for key=%s and offset=%d", len(result), key, offset)
 	}
@@ -57,15 +63,17 @@ func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
 }
 
 func (r RedisCacheService) Delete(key string) error {
+	now := strconv.FormatInt(time.Now().UnixNano(), 10)
 	var result[] string
-	if err := r.pool.Do(radix.Cmd(&result, "ZRANGEBYSCORE", key +":ttl", "-inf",  strconv.FormatInt(time.Now().UnixNano(), 10))); err != nil {
+	if err := r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key +":ttl", "-inf", now)); err != nil {
 		return err
 	}
-	if err := r.pool.Do(radix.Cmd(nil, "ZREMRANGEBYSCORE", key +":ttl", "-inf", strconv.FormatInt(time.Now().UnixNano(), 10))); err != nil {
+
+	if err := r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key +":ttl", "-inf", now)); err != nil {
 		return err
 	}
 	min := result[0]
 	max := result[len(result)-1]
 	log.Printf("Removing expired entries for %s in range %s to %s\n", key, min, max)
-	return r.pool.Do(radix.Cmd(nil, "ZREMRANGEBYSCORE", key, min, max))
+	return r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key, min, max))
 }
