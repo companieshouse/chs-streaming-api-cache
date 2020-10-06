@@ -1,13 +1,12 @@
 package cache
 
 import (
-	"github.com/mediocregopher/radix/v3"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
-var redisURL = "localhost:32771"
-var expiryInSeconds int64 = 120
+const redisURL = "localhost:32771"
+const expiryInSeconds int64 = 120
 
 func TestRedisCacheService_Create(t *testing.T) {
 	Convey("Given an instance od the cache service", t, func() {
@@ -24,7 +23,7 @@ func TestRedisCacheService_Create(t *testing.T) {
 }
 
 func TestRedisCacheService_Read(t *testing.T) {
-	Convey("Given an entry exits in the redis cache sortedSet", t, func() {
+	Convey("Given an entry exists in the redis cache sortedSet", t, func() {
 		redisCacheService := NewRedisCacheService("tcp", redisURL, 10, expiryInSeconds)
 		err := redisCacheService.Create("stream:test", "{id : 124}", 20)
 		if err != nil{
@@ -44,7 +43,27 @@ func TestRedisCacheService_Read(t *testing.T) {
 	})
 }
 
-type mockRedisCacheService struct{
-	pool *radix.Pool
+func TestRedisCacheService_Delete(t *testing.T) {
+	Convey("Given entries exist in the redis cache sortedSet", t, func() {
+		redisCacheService := NewRedisCacheService("tcp", redisURL, 10, 0)
+		for score := 0; score < 10 ; score++  {
+			err := redisCacheService.Create("stream:test3", "{id : 124}", int64(score))
+			if err != nil{
+				t.Error("Failed: " + err.Error())
+			}
+		}
+		Convey("When a call is made to delete expired entries", func(){
+			err := redisCacheService.Delete("stream:test3")
+			if err != nil{
+				t.Error("Failed: " + err.Error())
+			}
+			Convey("Then the expired entries should be removed from the cache", func(){
+				actual, err := redisCacheService.Read("stream:test3", 10)
+				if err != nil{
+					t.Error("Failed: " + err.Error())
+				}
+				So(len(actual), ShouldEqual, 0)
+			})
+		})
+	})
 }
-

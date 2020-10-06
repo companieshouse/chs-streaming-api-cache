@@ -12,7 +12,8 @@ type CacheService interface {
 	Create(key string, delta string, score int64) error
 	//Fetch a range of offsets using a specified offset number as the starting offset
 	Read(key string, offset int64) ([]string, error)
-	// TODO Delete a range of offsets from the sorted sets using matching timestamps.
+	//Delete a range of offsets from the sorted sets using matching timestamps.
+	Delete(key string) error
 }
 
 type RedisCacheService struct {
@@ -42,7 +43,7 @@ func (r RedisCacheService) Create(key string, delta string, score int64) error {
 	}
 	log.Printf("Creating time to live cache entry for key=%s and offset=%s", key, offset)
 	timestamp := strconv.FormatInt(time.Now().UnixNano() + int64(time.Nanosecond * time.Second * r.expiryInSeconds), 10)
-	return r.pool.Do(radix.Cmd(nil, "ZADD", key+":ttl", offset, timestamp))
+	return r.pool.Do(radix.Cmd(nil, "ZADD", key+":ttl", timestamp, offset))
 }
 
 func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
@@ -53,4 +54,18 @@ func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
 		log.Printf("Retrieved %d cached entries for key=%s and offset=%d", len(result), key, offset)
 	}
 	return result, err
+}
+
+func (r RedisCacheService) Delete(key string) error {
+	var result[] string
+	if err := r.pool.Do(radix.Cmd(&result, "ZRANGEBYSCORE", key +":ttl", "-inf",  strconv.FormatInt(time.Now().UnixNano(), 10))); err != nil {
+		return err
+	}
+	if err := r.pool.Do(radix.Cmd(nil, "ZREMRANGEBYSCORE", key +":ttl", "-inf", strconv.FormatInt(time.Now().UnixNano(), 10))); err != nil {
+		return err
+	}
+	min := result[0]
+	max := result[len(result)-1]
+	log.Printf("Removing expired entries for %s in range %s to %s\n", key, min, max)
+	return r.pool.Do(radix.Cmd(nil, "ZREMRANGEBYSCORE", key, min, max))
 }
