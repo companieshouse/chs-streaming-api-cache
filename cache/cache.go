@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	ZADD = "ZADD"
-	ZRANGEBYSCORE = "ZRANGEBYSCORE"
+	ZADD             = "ZADD"
+	ZRANGEBYSCORE    = "ZRANGEBYSCORE"
 	ZREMRANGEBYSCORE = "ZREMRANGEBYSCORE"
 )
 
@@ -23,7 +23,7 @@ type CacheService interface {
 }
 
 type RedisCacheService struct {
-	pool *radix.Pool
+	pool            *radix.Pool
 	expiryInSeconds time.Duration
 }
 
@@ -34,7 +34,7 @@ func NewRedisCacheService(network string, url string, size int, expiryInSeconds 
 		panic(err)
 	}
 	return &RedisCacheService{
-		pool: pool,
+		pool:            pool,
 		expiryInSeconds: time.Duration(expiryInSeconds),
 	}
 }
@@ -48,7 +48,7 @@ func (r RedisCacheService) Create(key string, delta string, score int64) error {
 		return err
 	}
 	log.Printf("Creating time to live cache entry for key=%s and offset=%s", key, offset)
-	timestamp := strconv.FormatInt(time.Now().UnixNano() + int64(time.Nanosecond * time.Second * r.expiryInSeconds), 10)
+	timestamp := strconv.FormatInt(time.Now().UnixNano()+int64(time.Nanosecond*time.Second*r.expiryInSeconds), 10)
 	return r.pool.Do(radix.Cmd(nil, ZADD, key+":ttl", timestamp, offset))
 }
 
@@ -56,7 +56,7 @@ func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
 	log.Printf("Retrieving cache entries for key=%s and offset=%d", key, offset)
 	var result []string
 	var err = r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key, "0", strconv.FormatInt(offset, 10)))
-	if err == nil{
+	if err == nil {
 		log.Printf("Retrieved %d cached entries for key=%s and offset=%d", len(result), key, offset)
 	}
 	return result, err
@@ -65,14 +65,14 @@ func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
 func (r RedisCacheService) Delete(key string) error {
 	now := strconv.FormatInt(time.Now().UnixNano(), 10)
 	// find expired timestamp entries
-	var result[] string
-	if err := r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key +":ttl", "-inf", now)); err != nil {
+	var result []string
+	if err := r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key+":ttl", "-inf", now)); err != nil {
 		return err
 	}
 
 	if len(result) > 0 {
 		// remove expired timestamp entries
-		if err := r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key +":ttl", "-inf", now)); err != nil {
+		if err := r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key+":ttl", "-inf", now)); err != nil {
 			return err
 		}
 		// remove equivalent delta entries
