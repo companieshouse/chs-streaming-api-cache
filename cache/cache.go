@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"github.com/mediocregopher/radix/v3"
 	"log"
 	"strconv"
@@ -53,12 +54,15 @@ func (r RedisCacheService) Create(key string, delta string, score int64) error {
 }
 
 func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
-	log.Printf("Retrieving cache entries for key=%s and offset=%d", key, offset)
 	var result []string
-	var err = r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key, "0", strconv.FormatInt(offset, 10)))
+	err := r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key, strconv.FormatInt(offset, 10), "inf"))
 	if err == nil {
 		log.Printf("Retrieved %d cached entries for key=%s and offset=%d", len(result), key, offset)
 	}
+	for _, delta := range result {
+		fmt.Println("Reading delta: ", delta)
+	}
+
 	return result, err
 }
 
@@ -72,16 +76,21 @@ func (r RedisCacheService) Delete(key string) error {
 
 	if len(result) > 0 {
 		// remove expired timestamp entries
-		if err := r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key+":ttl", "-inf", now)); err != nil {
+		var count int
+		if err := r.pool.Do(radix.Cmd(&count, ZREMRANGEBYSCORE, key+":ttl", "-inf", now)); err != nil {
 			return err
 		}
+		log.Printf("Removed %d expired entries for key %s\n", count, key+":ttl")
 		// remove equivalent delta entries
 		min := result[0]
 		max := result[len(result)-1]
 		log.Printf("Removing expired entries for %s in range %s to %s\n", key, min, max)
-		return r.pool.Do(radix.Cmd(nil, ZREMRANGEBYSCORE, key, min, max))
+		if err := r.pool.Do(radix.Cmd(&count, ZREMRANGEBYSCORE, key, min, max)); err != nil {
+			return err
+		}
+		log.Printf("Removed %d expired entries for key %s\n", count, key)
 	} else {
 		log.Printf("No expired entries for %s\n", key)
-		return nil
 	}
+	return nil
 }
