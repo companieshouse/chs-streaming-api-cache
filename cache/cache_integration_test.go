@@ -85,12 +85,12 @@ func TestRedisCacheService_Read(t *testing.T) {
 		if err != nil {
 			t.Error("Failed: " + err.Error())
 		}
-		Convey("When I fetch the cached entries for a given offset", func() {
-			actual, err := redisCacheService.Read(topic, 21)
+		Convey("When I fetch the cached entries", func() {
+			actual, err := redisCacheService.Read(topic, 0)
 			if err != nil {
 				t.Error("Failed: " + err.Error())
 			}
-			Convey("Then only the cached entries for the given offset should be found", func() {
+			Convey("Then the cached entries for the given topic should be found", func() {
 				So(len(actual), ShouldEqual, 1)
 				var expected = [1]string{"{id : 124}"}
 				So(actual[0], ShouldEqual, expected[0])
@@ -99,9 +99,9 @@ func TestRedisCacheService_Read(t *testing.T) {
 	})
 }
 
-func TestRedisCacheService_Delete(t *testing.T) {
-	const topic = "stream:test3"
-	Convey("Given entries exist in the redis cache sortedSet", t, func() {
+func TestRedisCacheService_ReadFromAGivenOffset(t *testing.T) {
+	Convey("Given an entry exists in the redis cache sortedSet", t, func() {
+		const topic = "stream:test3"
 		for score := 10; score < 20; score++ {
 			delta := fmt.Sprintf("{id : %d}", score)
 			err := redisCacheService.Create(topic, delta, int64(score))
@@ -109,74 +109,42 @@ func TestRedisCacheService_Delete(t *testing.T) {
 				t.Error("Failed: " + err.Error())
 			}
 		}
-		// allow entries to expire
-		fmt.Println("Sleeping...")
-		time.Sleep(time.Duration(envVariables.expiryInSeconds) * time.Second)
-		// add some more which wont have expired.
-		for score := 20; score < 25; score++ {
-			delta := fmt.Sprintf("{id : %d}", score)
-			err := redisCacheService.Create(topic, delta, int64(score))
+		Convey("When I fetch the cached entries for a given offset", func() {
+			actualArray, err := redisCacheService.Read(topic, 15)
 			if err != nil {
 				t.Error("Failed: " + err.Error())
 			}
-		}
-		Convey("When a call is made to delete expired entries", func() {
-
-			err := redisCacheService.Delete(topic)
-			if err != nil {
-				t.Error("Failed: " + err.Error())
-			}
-			Convey("Then the expired entries should be removed from the cache", func() {
-				actual, err := redisCacheService.Read(topic, 20)
-				if err != nil {
-					t.Error("Failed: " + err.Error())
+			Convey("Then only the cached entries for the given offset should be found", func() {
+				So(len(actualArray), ShouldEqual, 5)
+				var expected = []string{"{id : 15}", "{id : 16}", "{id : 17}", "{id : 18}", "{id : 19}"}
+				for index, actual := range actualArray {
+					fmt.Println("Actual: ", index, actual)
+					So(actual, ShouldEqual, expected[index])
 				}
-				// first 10 removed leaving 5
-				So(len(actual), ShouldEqual, 5)
 			})
 		})
 	})
 }
 
-func TestRedisCacheService_Delete_Handles_Duplicates(t *testing.T) {
-	Convey("Given entries exist in the redis cache sortedSet", t, func() {
+func TestRedisCacheService_ReadDoesNotReturnExpiredEntries(t *testing.T) {
+	Convey("Given an entry exists in the redis cache sortedSet", t, func() {
 		const topic = "stream:test4"
 		for score := 10; score < 20; score++ {
-			delta := fmt.Sprintf("{id : %d}", 1234)
-			err := redisCacheService.Create(topic, delta, int64(score))
-			if err != nil {
-				t.Error("Failed: " + err.Error())
-			}
-		}
-		actual, err := redisCacheService.Read(topic, 10)
-		if err != nil {
-			t.Error("Failed: " + err.Error())
-		}
-		// Duplicate entries - only one should be added.
-		So(len(actual), ShouldEqual, 1)
-		// allow entries to expire
-		fmt.Println("Sleeping...")
-		time.Sleep(time.Duration(envVariables.expiryInSeconds) * time.Second)
-		// add some more which wont have expired.
-		for score := 20; score < 25; score++ {
 			delta := fmt.Sprintf("{id : %d}", score)
 			err := redisCacheService.Create(topic, delta, int64(score))
 			if err != nil {
 				t.Error("Failed: " + err.Error())
 			}
 		}
-		Convey("When a call is made to delete expired entries", func() {
-			err := redisCacheService.Delete(topic)
-			if err != nil {
-				t.Error("Failed: " + err.Error())
-			}
-			Convey("Then the expired entries should be removed from the cache", func() {
-				actual, err := redisCacheService.Read(topic, 20)
+		Convey("When the entries become expired", func() {
+			fmt.Println("Waiting for cache entries to expire...")
+			time.Sleep(time.Duration(envVariables.expiryInSeconds) * time.Second)
+			Convey("Then the expired entries for the given offset should not be returned", func() {
+				actualArray, err := redisCacheService.Read(topic, 10)
 				if err != nil {
 					t.Error("Failed: " + err.Error())
 				}
-				// should be 5 that have not expired
-				So(len(actual), ShouldEqual, 5)
+				So(len(actualArray), ShouldEqual, 0)
 			})
 		})
 	})

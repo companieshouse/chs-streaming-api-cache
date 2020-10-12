@@ -5,13 +5,14 @@ import (
 	"github.com/mediocregopher/radix/v3"
 	"log"
 	"strconv"
-	"time"
 )
 
 const (
-	ZADD             = "ZADD"
-	ZRANGEBYSCORE    = "ZRANGEBYSCORE"
-	ZREMRANGEBYSCORE = "ZREMRANGEBYSCORE"
+	ZADD          = "ZADD"
+	ZRANGEBYSCORE = "ZRANGEBYSCORE"
+	SET           = "SET"
+	GET           = "GET"
+	EXPIRE        = "EXPIRE"
 )
 
 type CacheService interface {
@@ -19,13 +20,11 @@ type CacheService interface {
 	Create(key string, delta string, score int64) error
 	//Fetch a range of offsets using a specified offset number as the starting offset
 	Read(key string, offset int64) ([]string, error)
-	//Delete a range of offsets from the sorted sets using matching timestamps.
-	Delete(key string) error
 }
 
 type RedisCacheService struct {
 	pool            *radix.Pool
-	expiryInSeconds time.Duration
+	expiryInSeconds int64
 }
 
 func NewRedisCacheService(network string, url string, size int, expiryInSeconds int64) CacheService {
@@ -36,61 +35,50 @@ func NewRedisCacheService(network string, url string, size int, expiryInSeconds 
 	}
 	return &RedisCacheService{
 		pool:            pool,
-		expiryInSeconds: time.Duration(expiryInSeconds),
+		expiryInSeconds: expiryInSeconds,
 	}
 }
 
-func (r RedisCacheService) Create(key string, delta string, score int64) error {
-	log.Printf("Creating new cache entry for key=%s", key)
+func (r RedisCacheService) Create(key string, delta string, offset int64) error {
+	log.Printf("Creating new cache entries for key=%s", key)
 
-	offset := strconv.FormatInt(score, 10)
-	err := r.pool.Do(radix.Cmd(nil, ZADD, key, offset, delta))
-	if err != nil {
+	offsetAsString := strconv.FormatInt(offset, 10)
+	offsetsKey := key + ":offsets"
+	log.Printf("Creating sorted set cache entry for key=%s and offset=%s", offsetsKey, offsetAsString)
+	deltaKey := key + ":" + offsetAsString
+	if err := r.pool.Do(radix.Cmd(nil, ZADD, offsetsKey, offsetAsString, deltaKey)); err != nil {
 		return err
 	}
-	log.Printf("Creating time to live cache entry for key=%s and offset=%s", key, offset)
-	timestamp := strconv.FormatInt(time.Now().UnixNano()+int64(time.Nanosecond*time.Second*r.expiryInSeconds), 10)
-	return r.pool.Do(radix.Cmd(nil, ZADD, key+":ttl", timestamp, offset))
+
+	log.Printf("Creating new cache entry for key=%s", deltaKey)
+	expirySeconds := fmt.Sprint(r.expiryInSeconds)
+	if err := r.pool.Do(radix.Cmd(nil, SET, deltaKey, delta)); err != nil {
+		return err
+	}
+	log.Printf("Setting expiry time of %s seconds for key=%s\n", expirySeconds, deltaKey)
+	if err := r.pool.Do(radix.Cmd(nil, EXPIRE, deltaKey, expirySeconds)); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r RedisCacheService) Read(key string, offset int64) ([]string, error) {
-	var result []string
-	err := r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key, strconv.FormatInt(offset, 10), "inf"))
+	offsetAsString := strconv.FormatInt(offset, 10)
+	var offsets []string
+	err := r.pool.Do(radix.Cmd(&offsets, ZRANGEBYSCORE, key+":offsets", offsetAsString, "inf"))
 	if err == nil {
-		log.Printf("Retrieved %d cached entries for key=%s and offset=%d", len(result), key, offset)
+		log.Printf("Retrieved %d cached entries for key=%s and offset=%d", len(offsets), key, offset)
 	}
-	for _, delta := range result {
-		fmt.Println("Reading delta: ", delta)
-	}
-
-	return result, err
-}
-
-func (r RedisCacheService) Delete(key string) error {
-	now := strconv.FormatInt(time.Now().UnixNano(), 10)
-	// find expired timestamp entries
-	var result []string
-	if err := r.pool.Do(radix.Cmd(&result, ZRANGEBYSCORE, key+":ttl", "-inf", now)); err != nil {
-		return err
-	}
-
-	if len(result) > 0 {
-		// remove expired timestamp entries
-		var count int
-		if err := r.pool.Do(radix.Cmd(&count, ZREMRANGEBYSCORE, key+":ttl", "-inf", now)); err != nil {
-			return err
+	var deltas []string
+	for _, offset := range offsets {
+		var delta string
+		fmt.Printf("Reading delta for offset: %s\n", offset)
+		if err := r.pool.Do(radix.Cmd(&delta, GET, offset)); err != nil {
+			return nil, err
 		}
-		log.Printf("Removed %d expired entries for key %s\n", count, key+":ttl")
-		// remove equivalent delta entries
-		min := result[0]
-		max := result[len(result)-1]
-		log.Printf("Removing expired entries for %s in range %s to %s\n", key, min, max)
-		if err := r.pool.Do(radix.Cmd(&count, ZREMRANGEBYSCORE, key, min, max)); err != nil {
-			return err
+		if len(delta) > 0 {
+			deltas = append(deltas, delta)
 		}
-		log.Printf("Removed %d expired entries for key %s\n", count, key)
-	} else {
-		log.Printf("No expired entries for %s\n", key)
 	}
-	return nil
+	return deltas, err
 }
