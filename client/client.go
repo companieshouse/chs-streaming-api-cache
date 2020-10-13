@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/companieshouse/chs-streaming-api-cache/cache"
+	. "github.com/companieshouse/chs-streaming-api-cache/cache"
 	"net/http"
 	"os"
 	"sync"
@@ -15,13 +15,13 @@ type Client struct {
 	baseurl string
 	broker  Publishable
 	client  Gettable
-	service cache.CacheService
-	key string
-	wg *sync.WaitGroup
+	service CacheService
+	key     string
+	wg      *sync.WaitGroup
 }
 
 type Publishable interface {
-	Publish (msg string)
+	Publish(msg string)
 }
 
 type Gettable interface {
@@ -29,13 +29,13 @@ type Gettable interface {
 }
 
 //The result of the operation.
-type Result struct{
+type Result struct {
 	Data   string `json:"data"`
-	Offset int64 `json:"offset"`
+	Offset int64  `json:"offset"`
 }
 
-func NewClient(baseurl string, broker Publishable, client Gettable, service cache.CacheService, key string) *Client{
-	return &Client {
+func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string) *Client {
+	return &Client{
 		baseurl,
 		broker,
 		client,
@@ -45,7 +45,7 @@ func NewClient(baseurl string, broker Publishable, client Gettable, service cach
 	}
 }
 
-func (c *Client) Connect(){
+func (c *Client) Connect() {
 	resp, _ := c.client.Get(c.baseurl)
 	body := resp.Body
 	reader := bufio.NewReader(body)
