@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	. "github.com/companieshouse/chs-streaming-api-cache/cache"
+	"github.com/companieshouse/chs-streaming-api-cache/logger"
+	"github.com/companieshouse/chs.go/log"
 	"net/http"
 	"os"
 	"sync"
@@ -17,6 +19,7 @@ type Client struct {
 	client  Gettable
 	service CacheService
 	key     string
+	logger  logger.Logger
 	wg      *sync.WaitGroup
 }
 
@@ -57,16 +60,25 @@ func (c *Client) loop(reader *bufio.Reader) {
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
+			c.logger.Error(err, log.Data{})
 			fmt.Fprintf(os.Stderr, "error during resp.Body read:%s\n", err)
 			continue
 		}
 		result := &Result{}
-		json.Unmarshal(line, result)
-		c.service.Create(c.key, result.Data, result.Offset)
+		err = json.Unmarshal(line, result)
+		if err != nil {
+			c.logger.Error(err, log.Data{})
+			continue
+		}
+		err = c.service.Create(c.key, result.Data, result.Offset)
+		if err != nil {
+			c.logger.Error(err, log.Data{})
+			continue
+		}
 		c.broker.Publish(result.Data)
 		if c.wg != nil {
 			c.wg.Done()
 		}
-		time.Sleep(600)
+		time.Sleep(300)
 	}
 }
