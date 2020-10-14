@@ -14,13 +14,13 @@ import (
 )
 
 type Client struct {
-	baseurl string
-	broker  Publishable
-	client  Gettable
-	service CacheService
-	key     string
-	logger  logger.Logger
-	wg      *sync.WaitGroup
+	baseurl      string
+	broker       Publishable
+	httpClient   Gettable
+	cacheService CacheService
+	key          string
+	logger       logger.Logger
+	wg           *sync.WaitGroup
 }
 
 type Publishable interface {
@@ -37,19 +37,20 @@ type Result struct {
 	Offset int64  `json:"offset"`
 }
 
-func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string) *Client {
+func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string, logger logger.Logger) *Client {
 	return &Client{
 		baseurl,
 		broker,
 		client,
 		service,
 		key,
+		logger,
 		nil,
 	}
 }
 
 func (c *Client) Connect() {
-	resp, _ := c.client.Get(c.baseurl)
+	resp, _ := c.httpClient.Get(c.baseurl)
 	body := resp.Body
 	reader := bufio.NewReader(body)
 	go c.loop(reader)
@@ -70,7 +71,7 @@ func (c *Client) loop(reader *bufio.Reader) {
 			c.logger.Error(err, log.Data{})
 			continue
 		}
-		err = c.service.Create(c.key, result.Data, result.Offset)
+		err = c.cacheService.Create(c.key, result.Data, result.Offset)
 		if err != nil {
 			c.logger.Error(err, log.Data{})
 			continue
