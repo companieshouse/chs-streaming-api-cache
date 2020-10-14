@@ -33,12 +33,12 @@ func main() {
 		Router:        svc.Router(),
 	}
 
-	service.NewCacheService(cacheConfiguration).WithTopic(filingHistoryStream).WithPath("/filings").Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyProfileStream).WithPath("/companies").Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyInsolvencyStream).WithPath("/insolvency-cases").Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyChargesStream).WithPath("/charges").Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyOfficersStream).WithPath("/officers").Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyPSCStream).WithPath("/persons-with-significant-control").Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(filingHistoryStream).WithPath("/filings").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyProfileStream).WithPath("/companies").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyInsolvencyStream).WithPath("/insolvency-cases").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyChargesStream).WithPath("/charges").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyOfficersStream).WithPath("/officers").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyPSCStream).WithPath("/persons-with-significant-control").Initialise().Start()
 
 	svc.Router().Path("/healthcheck").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)

@@ -7,8 +7,10 @@ type Config struct {
 	BindAddress          string      `env:"BIND_ADDRESS"            flag:"bind-address"`
 	CertFile             string      `env:"CERT_FILE"               flag:"cert-file"`
 	KeyFile              string      `env:"KEY_FILE"                flag:"key-file"`
+	BackEndUrl           string      `env:"STREAMING_BACKEND_URL"   flag:"streaming_backend_url"`
 	RedisUrl             string      `env:"REDIS_URL"               flag:"redis-url"`
-	CacheExpiryInSeconds string      `env:"CACHE_EXPIRY_IN_SECONDS" flag:"cache-expiry-in-seconds"`
+	RedisPoolSize        int         `env:"REDIS_POOL_SIZE"         flag:"redis_pool_size"`
+	CacheExpiryInSeconds int64       `env:"CACHE_EXPIRY_IN_SECONDS" flag:"cache-expiry-in-seconds"`
 }
 
 // ServiceConfig returns a ServiceConfig interface for Config.

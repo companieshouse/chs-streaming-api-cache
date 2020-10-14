@@ -54,7 +54,7 @@ func startContainer() testcontainers.Container {
 	}
 
 	envVariables.redisURL = fmt.Sprintf("%s:%s", redisHost, redisPort.Port())
-	envVariables.expiryInSeconds = int64(2)
+	envVariables.expiryInSeconds = 2
 
 	redisCacheService = NewRedisCacheService("tcp", envVariables.redisURL, 10, envVariables.expiryInSeconds)
 

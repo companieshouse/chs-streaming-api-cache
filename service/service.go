@@ -12,10 +12,16 @@ import (
 	"net/http"
 )
 
+const network = "tcp"
+
 type CacheService struct {
-	broker       *broker.Broker
-	client		 *backendclient.Client
-	router       *pat.Router
+	broker     *broker.Broker
+	client     *backendclient.Client
+	router     *pat.Router
+	topic      string
+	path       string
+	backendURL string
+	redisCfg   RedisConfig
 }
 
 type Router interface {
@@ -27,31 +33,50 @@ type CacheConfiguration struct {
 	Router        *pat.Router
 }
 
+type RedisConfig struct {
+	redisUrl        string
+	expiryInSeconds int64
+	poolSize        int
+}
+
 func NewCacheService(cfg *CacheConfiguration) *CacheService {
 	return &CacheService{
-		broker:       broker.NewBroker(),
-		router:       cfg.Router,
+		broker:     broker.NewBroker(),
+		router:     cfg.Router,
+		backendURL: cfg.Configuration.BackEndUrl,
+		redisCfg: RedisConfig{
+			redisUrl:        cfg.Configuration.RedisUrl,
+			expiryInSeconds: cfg.Configuration.CacheExpiryInSeconds,
+			poolSize:        cfg.Configuration.RedisPoolSize,
+		},
 	}
 }
 
 func (s *CacheService) WithTopic(topic string) *CacheService {
-	s.client = backendclient.NewClient(
-		"url",
-		s.broker,
-		http.DefaultClient,
-		cache.NewRedisCacheService(
-			"tcp",
-			"localhost:32768",
-			10,
-			int64(3600),
-		),
-		topic,
-		logger.NewLogger())
+	s.topic = topic
 	return s
 }
 
 func (s *CacheService) WithPath(path string) *CacheService {
+	s.path = path
 	s.router.Path(path).Methods("GET").HandlerFunc(handlers.NewRequestHandler(s.broker, logger.NewLogger()).HandleRequest)
+	return s
+}
+
+func (s *CacheService) Initialise() *CacheService {
+	cfg := s.redisCfg
+	s.client = backendclient.NewClient(
+		s.backendURL+s.path,
+		s.broker,
+		http.DefaultClient,
+		cache.NewRedisCacheService(
+			network,
+			cfg.redisUrl,
+			cfg.poolSize,
+			cfg.expiryInSeconds,
+		),
+		s.topic,
+		logger.NewLogger())
 	return s
 }
 

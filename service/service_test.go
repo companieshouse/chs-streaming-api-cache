@@ -15,7 +15,7 @@ func TestCreateNewService(t *testing.T) {
 		configuration := &CacheConfiguration{
 			Configuration: &config.Config{
 				RedisUrl:             "localhost:6379",
-				CacheExpiryInSeconds: "2",
+				CacheExpiryInSeconds: 2,
 			},
 			Router: pat.New(),
 		}
@@ -33,7 +33,7 @@ func TestBindKafkaTopic(t *testing.T) {
 		configuration := &CacheConfiguration{
 			Configuration: &config.Config{
 				RedisUrl:             "localhost:6379",
-				CacheExpiryInSeconds: "2",
+				CacheExpiryInSeconds: 2,
 			},
 			Router: pat.New(),
 		}
@@ -53,7 +53,7 @@ func TestAttachRequestHandler(t *testing.T) {
 		configuration := &CacheConfiguration{
 			Configuration: &config.Config{
 				RedisUrl:             "localhost:6379",
-				CacheExpiryInSeconds: "2",
+				CacheExpiryInSeconds: 2,
 			},
 			Router: pat.New(),
 		}
