@@ -37,13 +37,14 @@ type Result struct {
 	Offset int64  `json:"offset"`
 }
 
-func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string) *Client {
+func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string, logger logger.Logger) *Client {
 	return &Client{
 		baseurl,
 		broker,
 		client,
 		service,
 		key,
+		logger,
 		nil,
 	}
 }

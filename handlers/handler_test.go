@@ -15,6 +15,10 @@ type mockBroker struct {
 	mock.Mock
 }
 
+type mockCacheService struct {
+	mock.Mock
+}
+
 type mockContext struct {
 	mock.Mock
 }
@@ -27,8 +31,9 @@ func TestCreateNewRequestHandler(t *testing.T) {
 	Convey("Given an existing broker instance", t, func() {
 		broker := &mockBroker{}
 		logger := &mockLogger{}
+		cacheService := &mockCacheService{}
 		Convey("When a new request handler instance is created", func() {
-			actual := NewRequestHandler(broker, logger)
+			actual := NewRequestHandler(broker, cacheService, logger, "topic")
 			Convey("Then a new request handler instance should be returned", func() {
 				So(actual, ShouldNotBeNil)
 				So(actual.broker, ShouldEqual, broker)
@@ -46,7 +51,8 @@ func TestWritePublishedMessageToResponseWriter(t *testing.T) {
 		broker.On("Subscribe").Return(subscription, nil)
 		logger := &mockLogger{}
 		logger.On("InfoR", mock.Anything, mock.Anything, mock.Anything).Return()
-		requestHandler := NewRequestHandler(broker, logger)
+		cacheService := &mockCacheService{}
+		requestHandler := NewRequestHandler(broker, cacheService, logger, "topic")
 		waitGroup := new(sync.WaitGroup)
 		requestHandler.wg = waitGroup
 		request := httptest.NewRequest("GET", "/endpoint", nil)
@@ -67,6 +73,30 @@ func TestWritePublishedMessageToResponseWriter(t *testing.T) {
 	})
 }
 
+func TestWriteCachedMessageToResponseWriter(t *testing.T) {
+	Convey("Given a running request handler", t, func() {
+		broker := &mockBroker{}
+		logger := &mockLogger{}
+		cacheService := &mockCacheService{}
+		cacheService.On("Read", mock.Anything, mock.Anything).Return([]string{"Hello world"}, nil)
+		requestHandler := NewRequestHandler(broker, cacheService, logger, "topic")
+		waitGroup := new(sync.WaitGroup)
+		requestHandler.wg = waitGroup
+		Convey("When an offset is requested", func() {
+			request := httptest.NewRequest("GET", "/endpoint?timepoint=2", nil)
+			request.Header.Add("X-Request-Id", "123")
+			response := httptest.NewRecorder()
+			waitGroup.Add(1)
+			go requestHandler.HandleRequest(response, request)
+			waitGroup.Wait()
+			output, _ := response.Body.ReadString('\n')
+			Convey("Then the message should be written to the output stream", func() {
+				So(output, ShouldEqual, "Hello world")
+			})
+		})
+	})
+}
+
 func TestHandlerUnsubscribesIfUserDisconnects(t *testing.T) {
 	Convey("Given a running request handler", t, func() {
 		subscription := make(chan string)
@@ -74,11 +104,12 @@ func TestHandlerUnsubscribesIfUserDisconnects(t *testing.T) {
 		broker := &mockBroker{}
 		broker.On("Subscribe").Return(subscription, nil)
 		broker.On("Unsubscribe", subscription).Return(nil)
+		cacheService := &mockCacheService{}
 		logger := &mockLogger{}
 		logger.On("InfoR", mock.Anything, mock.Anything, mock.Anything).Return()
 		context := &mockContext{}
 		context.On("Done").Return(requestComplete)
-		requestHandler := NewRequestHandler(broker, logger)
+		requestHandler := NewRequestHandler(broker, cacheService, logger, "topic")
 		waitGroup := new(sync.WaitGroup)
 		requestHandler.wg = waitGroup
 		request := httptest.NewRequest("GET", "/endpoint", nil).WithContext(context)
@@ -127,6 +158,16 @@ func (c *mockContext) Err() error {
 func (c *mockContext) Value(key interface{}) interface{} {
 	args := c.Called(key)
 	return args.Get(0)
+}
+
+func (s *mockCacheService) Create(key string, delta string, offset int64) error {
+	args := s.Called(key, delta, offset)
+	return args.Error(0)
+}
+
+func (s *mockCacheService) Read(key string, offset int64) ([]string, error) {
+	args := s.Called(key, offset)
+	return args.Get(0).([]string), args.Error(1)
 }
 
 func (l *mockLogger) Info(msg string, data ...log.Data) {
