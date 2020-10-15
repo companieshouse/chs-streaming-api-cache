@@ -1,14 +1,24 @@
 package service
 
 import (
-	"github.com/companieshouse/chs-streaming-api-cache/client"
 	"github.com/companieshouse/chs-streaming-api-cache/config"
 	cachehandlers "github.com/companieshouse/chs-streaming-api-cache/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/pat"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
+
+
+type mockBackendClient struct {
+	mock.Mock
+}
+
+func (s *mockBackendClient) Create(key string, delta string, offset int64) error {
+	args := s.Called(key, delta, offset)
+	return args.Error(0)
+}
 
 func TestCreateNewService(t *testing.T) {
 	Convey("When a new service instance is constructed", t, func() {
@@ -28,7 +38,7 @@ func TestCreateNewService(t *testing.T) {
 	})
 }
 
-func TestBindKafkaTopic(t *testing.T) {
+func TestBindTopic(t *testing.T) {
 	Convey("Given a new service instance has been constructed", t, func() {
 		configuration := &CacheConfiguration{
 			Configuration: &config.Config{
@@ -37,12 +47,13 @@ func TestBindKafkaTopic(t *testing.T) {
 			},
 			Router: pat.New(),
 		}
+
 		service := NewCacheService(configuration)
-		Convey("When a client for a topic is bound to it", func() {
+		Convey("When a topic is bound to it", func() {
 			actual := service.WithTopic("topic")
-			Convey("Then a new backend client should be allocated to the service", func() {
+			Convey("Then the topic should be added to the service", func() {
 				So(actual, ShouldEqual, service)
-				So(service.client, ShouldHaveSameTypeAs, &client.Client{})
+				So(actual.topic, ShouldEqual, "topic")
 			})
 		})
 	})

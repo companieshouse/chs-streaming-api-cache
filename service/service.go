@@ -81,5 +81,6 @@ func (s *CacheService) Initialise() *CacheService {
 }
 
 func (s *CacheService) Start() {
+	go s.client.Connect()
 	go s.broker.Run()
 }

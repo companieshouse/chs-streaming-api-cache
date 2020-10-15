@@ -24,11 +24,11 @@ type ServiceConfig struct {
 }
 
 func (cfg ServiceConfig) BindAddr() string {
-	return cfg.BindAddr()
+	return cfg.Config.BindAddress
 }
 
 func (cfg ServiceConfig) CertFile() string {
-	return cfg.CertFile()
+	return cfg.Config.CertFile
 }
 
 func (cfg ServiceConfig) KeyFile() string {

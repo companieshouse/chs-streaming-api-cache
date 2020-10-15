@@ -3,12 +3,10 @@ package client
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	. "github.com/companieshouse/chs-streaming-api-cache/cache"
 	"github.com/companieshouse/chs-streaming-api-cache/logger"
 	"github.com/companieshouse/chs.go/log"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 )
@@ -50,7 +48,11 @@ func NewClient(baseurl string, broker Publishable, client Gettable, service Cach
 }
 
 func (c *Client) Connect() {
-	resp, _ := c.httpClient.Get(c.baseurl)
+	resp, err := c.httpClient.Get(c.baseurl)
+	if err != nil {
+		c.logger.Error(err, log.Data{})
+		panic(err)
+	}
 	body := resp.Body
 	reader := bufio.NewReader(body)
 	go c.loop(reader)
@@ -62,7 +64,6 @@ func (c *Client) loop(reader *bufio.Reader) {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
 			c.logger.Error(err, log.Data{})
-			fmt.Fprintf(os.Stderr, "error during resp.Body read:%s\n", err)
 			continue
 		}
 		result := &Result{}
