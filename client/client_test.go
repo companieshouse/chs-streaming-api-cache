@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/companieshouse/chs-streaming-api-cache/broker"
+	"github.com/companieshouse/chs.go/log"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 	"net/http"
@@ -41,6 +42,22 @@ func (s *mockCacheService) Read(key string, offset int64) ([]string, error) {
 	return args.Get(0).([]string), args.Error(1)
 }
 
+type mockLogger struct {
+	mock.Mock
+}
+
+func (l *mockLogger) Info(msg string, data ...log.Data) {
+	panic("implement me")
+}
+
+func (l *mockLogger) InfoR(req *http.Request, message string, data ...log.Data) {
+	panic("implement me")
+}
+
+func (l *mockLogger) Error(err error, data ...log.Data){
+	l.Called(mock.Anything)
+}
+
 type mockBody struct {
 	*strings.Reader
 }
@@ -51,12 +68,12 @@ func (b *mockBody) Close() error {
 
 func TestNewClient(t *testing.T) {
 	Convey("given a new client instance is created", t, func() {
-		actual := NewClient("baseurl", &broker.Broker{}, &http.Client{}, &mockCacheService{}, "key")
+		actual := NewClient("baseurl", &broker.Broker{}, &http.Client{}, &mockCacheService{}, "key", &mockLogger{})
 		Convey("then a new client should be created", func() {
 			So(actual, ShouldNotBeNil)
 			So(actual.baseurl, ShouldEqual, "baseurl")
 			So(actual.broker, ShouldResemble, &broker.Broker{})
-			So(actual.client, ShouldResemble, &http.Client{})
+			So(actual.httpClient, ShouldResemble, &http.Client{})
 		})
 	})
 }
@@ -71,7 +88,9 @@ func TestPublishToBroker(t *testing.T) {
 		}, nil)
 		service := &mockCacheService{}
 		service.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		client := NewClient("baseurl", broker, httpClient, service, "key")
+		logger := &mockLogger{}
+		logger.On("Error", mock.Anything).Return(nil)
+		client := NewClient("baseurl", broker, httpClient, service, "key", logger)
 		client.wg = new(sync.WaitGroup)
 		Convey("when a new message is published", func() {
 			client.wg.Add(1)

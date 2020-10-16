@@ -3,24 +3,22 @@ package client
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	. "github.com/companieshouse/chs-streaming-api-cache/cache"
 	"github.com/companieshouse/chs-streaming-api-cache/logger"
 	"github.com/companieshouse/chs.go/log"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 )
 
 type Client struct {
-	baseurl string
-	broker  Publishable
-	client  Gettable
-	service CacheService
-	key     string
-	logger  logger.Logger
-	wg      *sync.WaitGroup
+	baseurl      string
+	broker       Publishable
+	httpClient   Gettable
+	cacheService CacheService
+	key          string
+	logger       logger.Logger
+	wg           *sync.WaitGroup
 }
 
 type Publishable interface {
@@ -37,19 +35,24 @@ type Result struct {
 	Offset int64  `json:"offset"`
 }
 
-func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string) *Client {
+func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string, logger logger.Logger) *Client {
 	return &Client{
 		baseurl,
 		broker,
 		client,
 		service,
 		key,
+		logger,
 		nil,
 	}
 }
 
 func (c *Client) Connect() {
-	resp, _ := c.client.Get(c.baseurl)
+	resp, err := c.httpClient.Get(c.baseurl)
+	if err != nil {
+		c.logger.Error(err, log.Data{})
+		panic(err)
+	}
 	body := resp.Body
 	reader := bufio.NewReader(body)
 	go c.loop(reader)
@@ -61,7 +64,6 @@ func (c *Client) loop(reader *bufio.Reader) {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
 			c.logger.Error(err, log.Data{})
-			fmt.Fprintf(os.Stderr, "error during resp.Body read:%s\n", err)
 			continue
 		}
 		result := &Result{}
@@ -70,7 +72,7 @@ func (c *Client) loop(reader *bufio.Reader) {
 			c.logger.Error(err, log.Data{})
 			continue
 		}
-		err = c.service.Create(c.key, result.Data, result.Offset)
+		err = c.cacheService.Create(c.key, result.Data, result.Offset)
 		if err != nil {
 			c.logger.Error(err, log.Data{})
 			continue
