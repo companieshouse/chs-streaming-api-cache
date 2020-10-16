@@ -42,6 +42,22 @@ func (s *mockCacheService) Read(key string, offset int64) ([]string, error) {
 	return args.Get(0).([]string), args.Error(1)
 }
 
+type mockLogger struct {
+	mock.Mock
+}
+
+func (l *mockLogger) Info(msg string, data ...log.Data) {
+	panic("implement me")
+}
+
+func (l *mockLogger) InfoR(req *http.Request, message string, data ...log.Data) {
+	panic("implement me")
+}
+
+func (l *mockLogger) Error(err error, data ...log.Data){
+	l.Called(mock.Anything)
+}
+
 type mockBody struct {
 	*strings.Reader
 }
@@ -73,7 +89,7 @@ func TestNewClient(t *testing.T) {
 			So(actual, ShouldNotBeNil)
 			So(actual.baseurl, ShouldEqual, "baseurl")
 			So(actual.broker, ShouldResemble, &broker.Broker{})
-			So(actual.client, ShouldResemble, &http.Client{})
+			So(actual.httpClient, ShouldResemble, &http.Client{})
 		})
 	})
 }
