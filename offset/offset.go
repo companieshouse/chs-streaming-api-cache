@@ -33,7 +33,7 @@ func (of *Offset) Parse(offset string) (int64, error) {
 		return 0, nil
 	}
 
-	o, err := strconv.Atoi(offset)
+	o, err :=strconv.ParseInt(offset, 10, 64)
 	if err != nil {
 		return 0, err
 	}

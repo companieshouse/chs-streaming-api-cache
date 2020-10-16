@@ -75,10 +75,13 @@ func TestWritePublishedMessageToResponseWriter(t *testing.T) {
 
 func TestWriteCachedMessageToResponseWriter(t *testing.T) {
 	Convey("Given a running request handler", t, func() {
+		subscription := make(chan string)
 		broker := &mockBroker{}
+		broker.On("Subscribe").Return(subscription, nil)
 		logger := &mockLogger{}
+		logger.On("InfoR", mock.Anything, mock.Anything, mock.Anything).Return()
 		cacheService := &mockCacheService{}
-		cacheService.On("Read", mock.Anything, mock.Anything).Return([]string{"Hello world"}, nil)
+		cacheService.On("Read", mock.Anything, mock.Anything).Return([]string{"Hello from cache"}, nil)
 		requestHandler := NewRequestHandler(broker, cacheService, logger, "topic")
 		waitGroup := new(sync.WaitGroup)
 		requestHandler.wg = waitGroup
@@ -91,7 +94,9 @@ func TestWriteCachedMessageToResponseWriter(t *testing.T) {
 			waitGroup.Wait()
 			output, _ := response.Body.ReadString('\n')
 			Convey("Then the message should be written to the output stream", func() {
-				So(output, ShouldEqual, "Hello world")
+				So(output, ShouldEqual, "Hello from cache")
+				So(logger.AssertCalled(t, "InfoR", request, "User connected", mock.Anything), ShouldBeTrue)
+				So(broker.AssertCalled(t, "Subscribe"), ShouldBeTrue)
 			})
 		})
 	})

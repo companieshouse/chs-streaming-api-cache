@@ -38,11 +38,9 @@ func (h *RequestHandler) HandleRequest(writer http.ResponseWriter, request *http
 	o, _ := h.offset.Parse(request.URL.Query().Get("timepoint"))
 	if o > 0 {
 		h.processOffset(writer, o)
-	} else {
-		if h.processHttp(writer, request) {
-			return
-		}
 	}
+	h.processHttp(writer, request)
+	return
 }
 
 func (h *RequestHandler) processOffset(writer http.ResponseWriter, o int64) {
