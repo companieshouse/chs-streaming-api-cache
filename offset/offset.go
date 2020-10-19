@@ -41,5 +41,5 @@ func (of *Offset) Parse(offset string) (int64, error) {
 		return 0, ErrNegativeOffset
 	}
 
-	return int64(o), nil
+	return o, nil
 }

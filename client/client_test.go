@@ -66,22 +66,6 @@ func (b *mockBody) Close() error {
 	return nil
 }
 
-type mockLogger struct {
-	mock.Mock
-}
-
-func (l *mockLogger) Info(msg string, data ...log.Data) {
-	panic("implement me")
-}
-
-func (l *mockLogger) InfoR(req *http.Request, message string, data ...log.Data) {
-	panic("implement me")
-}
-
-func (l *mockLogger) Error(err error, data ...log.Data){
-	l.Called(mock.Anything)
-}
-
 func TestNewClient(t *testing.T) {
 	Convey("given a new client instance is created", t, func() {
 		actual := NewClient("baseurl", &broker.Broker{}, &http.Client{}, &mockCacheService{}, "key", &mockLogger{})

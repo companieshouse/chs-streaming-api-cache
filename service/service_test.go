@@ -6,19 +6,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/pat"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/mock"
 	"testing"
 )
-
-
-type mockBackendClient struct {
-	mock.Mock
-}
-
-func (s *mockBackendClient) Create(key string, delta string, offset int64) error {
-	args := s.Called(key, delta, offset)
-	return args.Error(0)
-}
 
 func TestCreateNewService(t *testing.T) {
 	Convey("When a new service instance is constructed", t, func() {
@@ -86,3 +75,4 @@ func TestAttachRequestHandler(t *testing.T) {
 		})
 	})
 }
+

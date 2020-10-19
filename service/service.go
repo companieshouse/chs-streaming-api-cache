@@ -59,24 +59,28 @@ func (s *CacheService) WithTopic(topic string) *CacheService {
 
 func (s *CacheService) WithPath(path string) *CacheService {
 	s.path = path
-	s.router.Path(path).Methods("GET").HandlerFunc(handlers.NewRequestHandler(s.broker, logger.NewLogger()).HandleRequest)
 	return s
 }
 
 func (s *CacheService) Initialise() *CacheService {
 	cfg := s.redisCfg
+
+	redisCacheService := cache.NewRedisCacheService(
+		network,
+		cfg.redisUrl,
+		cfg.poolSize,
+		cfg.expiryInSeconds,
+	)
+
 	s.client = backendclient.NewClient(
 		s.backendURL+s.path,
 		s.broker,
 		http.DefaultClient,
-		cache.NewRedisCacheService(
-			network,
-			cfg.redisUrl,
-			cfg.poolSize,
-			cfg.expiryInSeconds,
-		),
+		redisCacheService,
 		s.topic,
 		logger.NewLogger())
+
+	s.router.Path(s.path).Methods("GET").HandlerFunc(handlers.NewRequestHandler(s.broker, redisCacheService, logger.NewLogger(), s.topic).HandleRequest)
 	return s
 }
 
