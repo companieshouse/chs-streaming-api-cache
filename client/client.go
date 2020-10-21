@@ -15,7 +15,7 @@ type Client struct {
 	baseurl      string
 	broker       Publishable
 	httpClient   Gettable
-	cacheService CacheService
+	cacheService Cacheable
 	key          string
 	logger       logger.Logger
 	wg           *sync.WaitGroup
@@ -35,7 +35,7 @@ type Result struct {
 	Offset int64  `json:"offset"`
 }
 
-func NewClient(baseurl string, broker Publishable, client Gettable, service CacheService, key string, logger logger.Logger) *Client {
+func NewClient(baseurl string, broker Publishable, client Gettable, service Cacheable, key string, logger logger.Logger) *Client {
 	return &Client{
 		baseurl,
 		broker,
@@ -83,4 +83,8 @@ func (c *Client) loop(reader *bufio.Reader) {
 		}
 		time.Sleep(300)
 	}
+}
+
+func (c *Client) Run() {
+	c.Connect()
 }

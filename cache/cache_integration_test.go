@@ -16,7 +16,7 @@ var envVariables struct {
 	expiryInSeconds int64
 }
 
-var redisCacheService CacheService
+var redisCacheService Cacheable
 var ctx context.Context
 
 func TestMain(m *testing.M) {
