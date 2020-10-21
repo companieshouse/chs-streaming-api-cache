@@ -74,7 +74,7 @@ func (h *RequestHandler) processHttp(writer http.ResponseWriter, request *http.R
 	for {
 		select {
 		case msg := <-subscription:
-			_, _ = writer.Write([]byte(msg))
+			_, _ = writer.Write([]byte(msg+"\n"))
 			writer.(http.Flusher).Flush()
 			if h.wg != nil {
 				h.wg.Done()
