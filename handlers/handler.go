@@ -16,14 +16,14 @@ type Subscribable interface {
 
 type RequestHandler struct {
 	broker       Subscribable
-	cacheService CacheService
+	cacheService Cacheable
 	key          string
 	logger       logger.Logger
 	offset       offset.Interface
 	wg           *sync.WaitGroup
 }
 
-func NewRequestHandler(broker Subscribable, cacheService CacheService, logger logger.Logger, topic string) *RequestHandler {
+func NewRequestHandler(broker Subscribable, cacheService Cacheable, logger logger.Logger, topic string) *RequestHandler {
 	return &RequestHandler{
 		broker:       broker,
 		logger:       logger,

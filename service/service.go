@@ -65,7 +65,7 @@ func (s *CacheService) WithPath(path string) *CacheService {
 func (s *CacheService) Initialise() *CacheService {
 	cfg := s.redisCfg
 
-	redisCacheService := cache.NewRedisCacheService(
+	cacheClient := cache.NewRedisCacheService(
 		network,
 		cfg.redisUrl,
 		cfg.poolSize,
@@ -76,15 +76,15 @@ func (s *CacheService) Initialise() *CacheService {
 		s.backendURL+s.path,
 		s.broker,
 		http.DefaultClient,
-		redisCacheService,
+		cacheClient,
 		s.topic,
 		logger.NewLogger())
 
-	s.router.Path(s.path).Methods("GET").HandlerFunc(handlers.NewRequestHandler(s.broker, redisCacheService, logger.NewLogger(), s.topic).HandleRequest)
+	s.router.Path(s.path).Methods("GET").HandlerFunc(handlers.NewRequestHandler(s.broker, cacheClient, logger.NewLogger(), s.topic).HandleRequest)
 	return s
 }
 
 func (s *CacheService) Start() {
-	go s.client.Connect()
+	go s.client.Run()
 	go s.broker.Run()
 }
