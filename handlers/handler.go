@@ -59,8 +59,9 @@ func (h *RequestHandler) processOffset(writer http.ResponseWriter, o int64) {
 		h.logger.Error(err, log.Data{"timepoint": o, "topic": h.key})
 		return
 	}
+	writer.WriteHeader(http.StatusOK)
 	for _, delta := range deltas {
-		_, _ = writer.Write([]byte(delta))
+		_, _ = writer.Write([]byte(delta+"\n"))
 		writer.(http.Flusher).Flush()
 		if h.wg != nil {
 			h.wg.Done()
@@ -71,6 +72,7 @@ func (h *RequestHandler) processOffset(writer http.ResponseWriter, o int64) {
 func (h *RequestHandler) processHttp(writer http.ResponseWriter, request *http.Request) bool {
 	h.logger.InfoR(request, "User connected")
 	subscription, _ := h.broker.Subscribe()
+	writer.WriteHeader(http.StatusOK)
 	for {
 		select {
 		case msg := <-subscription:

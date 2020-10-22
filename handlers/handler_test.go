@@ -51,6 +51,7 @@ func TestWritePublishedMessageToResponseWriter(t *testing.T) {
 		broker.On("Subscribe").Return(subscription, nil)
 		logger := &mockLogger{}
 		logger.On("InfoR", mock.Anything, mock.Anything, mock.Anything).Return()
+		logger.On("Info", mock.Anything, mock.Anything).Return()
 		cacheService := &mockCacheService{}
 		requestHandler := NewRequestHandler(broker, cacheService, logger, "topic")
 		waitGroup := new(sync.WaitGroup)
@@ -67,7 +68,7 @@ func TestWritePublishedMessageToResponseWriter(t *testing.T) {
 			Convey("Then the message should be written to the output stream", func() {
 				So(logger.AssertCalled(t, "InfoR", request, "User connected", mock.Anything), ShouldBeTrue)
 				So(broker.AssertCalled(t, "Subscribe"), ShouldBeTrue)
-				So(output, ShouldEqual, "Hello world")
+				So(output, ShouldEqual, "Hello world\n")
 			})
 		})
 	})
@@ -80,6 +81,7 @@ func TestWriteCachedMessageToResponseWriter(t *testing.T) {
 		broker.On("Subscribe").Return(subscription, nil)
 		logger := &mockLogger{}
 		logger.On("InfoR", mock.Anything, mock.Anything, mock.Anything).Return()
+		logger.On("Info", mock.Anything, mock.Anything).Return()
 		cacheService := &mockCacheService{}
 		cacheService.On("Read", mock.Anything, mock.Anything).Return([]string{"Hello from cache"}, nil)
 		requestHandler := NewRequestHandler(broker, cacheService, logger, "topic")
@@ -94,7 +96,7 @@ func TestWriteCachedMessageToResponseWriter(t *testing.T) {
 			waitGroup.Wait()
 			output, _ := response.Body.ReadString('\n')
 			Convey("Then the message should be written to the output stream", func() {
-				So(output, ShouldEqual, "Hello from cache")
+				So(output, ShouldEqual, "Hello from cache\n")
 				So(logger.AssertCalled(t, "InfoR", request, "User connected", mock.Anything), ShouldBeTrue)
 				So(broker.AssertCalled(t, "Subscribe"), ShouldBeTrue)
 			})
@@ -112,6 +114,7 @@ func TestHandlerUnsubscribesIfUserDisconnects(t *testing.T) {
 		cacheService := &mockCacheService{}
 		logger := &mockLogger{}
 		logger.On("InfoR", mock.Anything, mock.Anything, mock.Anything).Return()
+		logger.On("Info", mock.Anything, mock.Anything).Return()
 		context := &mockContext{}
 		context.On("Done").Return(requestComplete)
 		requestHandler := NewRequestHandler(broker, cacheService, logger, "topic")
