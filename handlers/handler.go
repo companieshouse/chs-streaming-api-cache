@@ -46,6 +46,9 @@ func (h *RequestHandler) HandleRequest(writer http.ResponseWriter, request *http
 
 	if o > 0 {
 		h.processOffset(writer, o)
+	} else {
+		_, _ = writer.Write([]byte("\n"))
+		writer.(http.Flusher).Flush()
 	}
 	h.processHttp(writer, request)
 	return

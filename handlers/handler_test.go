@@ -64,11 +64,13 @@ func TestWritePublishedMessageToResponseWriter(t *testing.T) {
 			waitGroup.Add(1)
 			subscription <- "Hello world"
 			waitGroup.Wait()
-			output, _ := response.Body.ReadString('\n')
+			firstLine, _ := response.Body.ReadString('\n')
+			secondLine, _ := response.Body.ReadString('\n')
+			output := firstLine + secondLine
 			Convey("Then the message should be written to the output stream", func() {
 				So(logger.AssertCalled(t, "InfoR", request, "User connected", mock.Anything), ShouldBeTrue)
 				So(broker.AssertCalled(t, "Subscribe"), ShouldBeTrue)
-				So(output, ShouldEqual, "Hello world\n")
+				So(output, ShouldEqual, "\nHello world\n")
 			})
 		})
 	})
