@@ -62,7 +62,6 @@ func (h *RequestHandler) processOffset(writer http.ResponseWriter, o int64) {
 		h.logger.Error(err, log.Data{"timepoint": o, "topic": h.key})
 		return
 	}
-	writer.WriteHeader(http.StatusOK)
 	for _, delta := range deltas {
 		_, _ = writer.Write([]byte(delta+"\n"))
 		writer.(http.Flusher).Flush()
