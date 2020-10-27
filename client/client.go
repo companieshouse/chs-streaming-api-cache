@@ -53,6 +53,10 @@ func (c *Client) Connect() {
 		c.logger.Error(err, log.Data{})
 		panic(err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		c.logger.Info("Unable to stream from endpoint", log.Data{"endpoint" : c.baseurl, "Http Status" : resp.StatusCode})
+		panic("Unable to stream from endpoint")
+	}
 	body := resp.Body
 	reader := bufio.NewReader(body)
 	go c.loop(reader)
