@@ -2,10 +2,7 @@ package broker
 
 import (
 	"errors"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 )
 
 //A broker to which cache broker will send messages published to all subscribed users.
@@ -14,7 +11,6 @@ type Broker struct {
 	userUnsubscribed chan *Event
 	users            map[chan string]bool
 	data             chan string
-	systemEvents     chan os.Signal
 	wg               *sync.WaitGroup
 }
 
@@ -32,14 +28,11 @@ type Result struct {
 
 //Create a new broker instance.
 func NewBroker() *Broker {
-	systemEvents := make(chan os.Signal)
-	signal.Notify(systemEvents, syscall.SIGINT, syscall.SIGTERM)
 	return &Broker{
 		userSubscribed:   make(chan *Event),
 		userUnsubscribed: make(chan *Event),
 		users:            make(map[chan string]bool),
 		data:             make(chan string),
-		systemEvents:     systemEvents,
 	}
 }
 
@@ -78,15 +71,6 @@ func (b *Broker) Run() {
 			for user := range b.users {
 				user <- data
 			}
-		case <-b.systemEvents:
-			for user := range b.users {
-				close(user)
-				delete(b.users, user)
-			}
-			if b.wg != nil {
-				b.wg.Done()
-			}
-			return
 		}
 	}
 }
