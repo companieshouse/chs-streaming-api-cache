@@ -1,5 +1,6 @@
-CHS_ENV_HOME  ?= $(HOME)/.chs_env
-TESTS         ?= ./...
+CHS_ENV_HOME      ?= $(HOME)/.chs_env
+UNIT_TESTS        ?= `go list ./... | grep -v 'integrationtesting'`
+INTEGRATION_TESTS ?= `go list ./... | grep 'integrationtesting'`
 
 bin           := chs-streaming-api-cache
 test_path     := ./test
@@ -27,11 +28,11 @@ test: test-unit test-integration
 
 .PHONY: test-unit
 test-unit:
-	go test $(TESTS) -run 'Unit' -coverprofile=coverage.out
+	go test $(UNIT_TESTS) -coverprofile=coverage.out
 
 .PHONY: test-integration
 test-integration:
-	$(source_env); go test $(TESTS) -run 'Integration'
+	$(source_env); go test $(INTEGRATION_TESTS)
 
 .PHONY: convey
 convey: clean build
