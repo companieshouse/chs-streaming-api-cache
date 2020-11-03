@@ -4,13 +4,19 @@ import "github.com/ian-kent/gofigure"
 
 type Config struct {
 	gofigure             interface{} `order:"env,flag"`
-	BindAddress          string      `env:"BIND_ADDRESS"            flag:"bind-address"`
-	CertFile             string      `env:"CERT_FILE"               flag:"cert-file"`
-	KeyFile              string      `env:"KEY_FILE"                flag:"key-file"`
-	BackEndUrl           string      `env:"STREAMING_BACKEND_URL"   flag:"streaming_backend_url"`
-	RedisUrl             string      `env:"REDIS_URL"               flag:"redis-url"`
-	RedisPoolSize        int         `env:"REDIS_POOL_SIZE"         flag:"redis_pool_size"`
-	CacheExpiryInSeconds int64       `env:"CACHE_EXPIRY_IN_SECONDS" flag:"cache-expiry-in-seconds"`
+	BindAddress          string      `env:"BIND_ADDRESS"                    flag:"bind-address"`
+	CertFile             string      `env:"CERT_FILE"                       flag:"cert-file"`
+	KeyFile              string      `env:"KEY_FILE"                        flag:"key-file"`
+	BackEndUrl           string      `env:"STREAMING_BACKEND_URL"           flag:"streaming_backend_url"`
+	RedisUrl             string      `env:"REDIS_URL"                       flag:"redis-url"`
+	RedisPoolSize        int         `env:"REDIS_POOL_SIZE"                 flag:"redis_pool_size"`
+	CacheExpiryInSeconds int64       `env:"CACHE_EXPIRY_IN_SECONDS"         flag:"cache-expiry-in-seconds"`
+	StreamFilingsPath    string      `env:"STREAM_BACKEND_FILINGS_PATH"     flag:"stream-backend-filings-path"`
+	StreamCompaniesPath  string      `env:"STREAM_BACKEND_COMPANIES_PATH"   flag:"stream-backend-companies-path"`
+	StreamInsolvencyPath string      `env:"STREAM_BACKEND_INSOLVENCY_PATH"  flag:"stream-backend-insolvency-path"`
+	StreamChargesPath    string      `env:"STREAM_BACKEND_CHARGES_PATH"     flag:"stream-backend-charges-path"`
+	StreamOfficersPath   string      `env:"STREAM_BACKEND_OFFICERS_PATH"    flag:"stream-backend-officers-path"`
+	StreamPSCsPath       string      `env:"STREAM_BACKEND_PSCS_PATH"        flag:"stream-backend-pscs-path"`
 }
 
 // ServiceConfig returns a ServiceConfig interface for Config.
