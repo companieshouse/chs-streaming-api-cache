@@ -3,7 +3,6 @@ module github.com/companieshouse/chs-streaming-api-cache
 go 1.15
 
 require (
-	github.com/Shopify/sarama v1.23.1
 	github.com/companieshouse/chs.go v1.1.10
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/pat v1.0.1

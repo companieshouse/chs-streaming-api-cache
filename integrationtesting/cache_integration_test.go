@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+    "github.com/companieshouse/chs-streaming-api-cache/cache"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -16,7 +17,7 @@ var envVariables struct {
 	expiryInSeconds int64
 }
 
-var redisCacheService Cacheable
+var redisCacheService cache.Cacheable
 var ctx context.Context
 
 func TestMain(m *testing.M) {
@@ -56,7 +57,7 @@ func startContainer() testcontainers.Container {
 	envVariables.redisURL = fmt.Sprintf("%s:%s", redisHost, redisPort.Port())
 	envVariables.expiryInSeconds = 2
 
-	redisCacheService = NewRedisCacheService("tcp", envVariables.redisURL, 10, envVariables.expiryInSeconds)
+	redisCacheService = cache.NewRedisCacheService("tcp", envVariables.redisURL, 10, envVariables.expiryInSeconds)
 
 	return redisC
 }
@@ -66,7 +67,7 @@ func stopContainer(container testcontainers.Container) {
 	container.Terminate(ctx)
 }
 
-func TestRedisCacheService_Create(t *testing.T) {
+func TestIntegrationRedisCacheService_Create(t *testing.T) {
 	Convey("When I create a cached entry", t, func() {
 		const topic = "stream:test"
 		err := redisCacheService.Create(topic, "{id : 123}", 20)
@@ -78,7 +79,7 @@ func TestRedisCacheService_Create(t *testing.T) {
 	})
 }
 
-func TestRedisCacheService_Read(t *testing.T) {
+func TestIntegrationRedisCacheService_Read(t *testing.T) {
 	Convey("Given an entry exists in the redis cache sortedSet", t, func() {
 		const topic = "stream:test2"
 		err := redisCacheService.Create(topic, "{id : 124}", 21)
@@ -99,7 +100,7 @@ func TestRedisCacheService_Read(t *testing.T) {
 	})
 }
 
-func TestRedisCacheService_ReadFromAGivenOffset(t *testing.T) {
+func TestIntegrationRedisCacheService_ReadFromAGivenOffset(t *testing.T) {
 	Convey("Given an entry exists in the redis cache sortedSet", t, func() {
 		const topic = "stream:test3"
 		for score := 10; score < 20; score++ {
@@ -126,7 +127,7 @@ func TestRedisCacheService_ReadFromAGivenOffset(t *testing.T) {
 	})
 }
 
-func TestRedisCacheService_ReadDoesNotReturnExpiredEntries(t *testing.T) {
+func TestIntegrationRedisCacheService_ReadDoesNotReturnExpiredEntries(t *testing.T) {
 	Convey("Given an entry exists in the redis cache sortedSet", t, func() {
 		const topic = "stream:test4"
 		for score := 10; score < 20; score++ {
