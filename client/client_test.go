@@ -54,7 +54,7 @@ func (l *mockLogger) InfoR(req *http.Request, message string, data ...log.Data) 
 	panic("implement me")
 }
 
-func (l *mockLogger) Error(err error, data ...log.Data){
+func (l *mockLogger) Error(err error, data ...log.Data) {
 	l.Called(mock.Anything)
 }
 
@@ -68,7 +68,7 @@ func (b *mockBody) Close() error {
 
 func TestNewClient(t *testing.T) {
 	Convey("given a new client instance is created", t, func() {
-		actual := NewClient("baseurl", &broker.Broker{}, &http.Client{}, &mockCacheService{}, "key", &mockLogger{})
+		actual := NewClient("baseurl", "path", &broker.Broker{}, &http.Client{}, &mockCacheService{}, "key", &mockLogger{})
 		Convey("then a new client should be created", func() {
 			So(actual, ShouldNotBeNil)
 			So(actual.baseurl, ShouldEqual, "baseurl")
@@ -90,7 +90,7 @@ func TestPublishToBroker(t *testing.T) {
 		service.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		logger := &mockLogger{}
 		logger.On("Error", mock.Anything).Return(nil)
-		client := NewClient("baseurl", broker, httpClient, service, "key", logger)
+		client := NewClient("baseurl", "path", broker, httpClient, service, "key", logger)
 		client.wg = new(sync.WaitGroup)
 		Convey("when a new message is published", func() {
 			client.wg.Add(1)
