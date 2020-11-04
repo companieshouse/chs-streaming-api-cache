@@ -13,6 +13,7 @@ import (
 
 type Client struct {
 	baseurl      string
+	path         string
 	broker       Publishable
 	httpClient   Gettable
 	cacheService Cacheable
@@ -35,27 +36,29 @@ type Result struct {
 	Offset int64  `json:"offset"`
 }
 
-func NewClient(baseurl string, broker Publishable, client Gettable, service Cacheable, key string, logger logger.Logger) *Client {
+func NewClient(baseurl string, path string, broker Publishable, client Gettable, service Cacheable, key string, logger logger.Logger) *Client {
 	return &Client{
-		baseurl,
-		broker,
-		client,
-		service,
-		key,
-		logger,
-		nil,
+		baseurl:      baseurl,
+		path:         path,
+		broker:       broker,
+		httpClient:   client,
+		cacheService: service,
+		key:          key,
+		logger:       logger,
+		wg:           nil,
 	}
 }
 
 func (c *Client) Connect() {
-	resp, err := c.httpClient.Get(c.baseurl)
+	url := c.baseurl + c.path
+	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		c.logger.Error(err, log.Data{})
 		panic(err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		c.logger.Info("Unable to stream from endpoint", log.Data{"endpoint" : c.baseurl, "Http Status" : resp.StatusCode})
-		panic("Unable to stream from endpoint")
+		c.logger.Info("Unable to stream from backend endpoint", log.Data{"endpoint": c.baseurl, "path": c.path, "Http Status": resp.StatusCode})
+		panic("Unable to stream from backend endpoint")
 	}
 	body := resp.Body
 	reader := bufio.NewReader(body)

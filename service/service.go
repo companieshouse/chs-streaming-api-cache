@@ -7,6 +7,7 @@ import (
 	"github.com/companieshouse/chs-streaming-api-cache/config"
 	"github.com/companieshouse/chs-streaming-api-cache/handlers"
 	"github.com/companieshouse/chs-streaming-api-cache/logger"
+	"github.com/companieshouse/chs-streaming-api-cache/mapper"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/pat"
 	"net/http"
@@ -22,6 +23,7 @@ type CacheService struct {
 	path       string
 	backendURL string
 	redisCfg   RedisConfig
+	myMapper   *mapper.ConfigurationPathMapper
 }
 
 type Router interface {
@@ -49,6 +51,7 @@ func NewCacheService(cfg *CacheConfiguration) *CacheService {
 			expiryInSeconds: cfg.Configuration.CacheExpiryInSeconds,
 			poolSize:        cfg.Configuration.RedisPoolSize,
 		},
+		myMapper: mapper.New(cfg.Configuration),
 	}
 }
 
@@ -72,8 +75,14 @@ func (s *CacheService) Initialise() *CacheService {
 		cfg.expiryInSeconds,
 	)
 
+	backendPath, err := s.myMapper.GetBackendPathForPath(s.path)
+	if err != nil {
+		// default to same Url
+		backendPath = s.path
+	}
 	s.client = backendclient.NewClient(
-		s.backendURL+s.path,
+		s.backendURL,
+		backendPath,
 		s.broker,
 		http.DefaultClient,
 		cacheClient,
