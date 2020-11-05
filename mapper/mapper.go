@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	FilingHistoryPath = "/filings"
-	CompaniesPath     = "/companies"
-	InsolvencyPath    = "/insolvency-cases"
-	ChargesPath       = "/charges"
-	OfficersPath      = "/officers"
-	PSCsPath          = "/persons-with-significant-control"
+	FilingHistoryPath = "/streaming-api-cache/filings"
+	CompaniesPath     = "/streaming-api-cache/companies"
+	InsolvencyPath    = "/streaming-api-cache/insolvency-cases"
+	ChargesPath       = "/streaming-api-cache/charges"
+	OfficersPath      = "/streaming-api-cache/officers"
+	PSCsPath          = "/streaming-api-cache/persons-with-significant-control"
 )
 
 //A topic mapper that obtains topics for the specified resource kind from the app configuration model
