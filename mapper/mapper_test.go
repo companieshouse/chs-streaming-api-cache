@@ -13,12 +13,12 @@ var (
 
 func initMapperTest() {
 	cfg = config.Config{
-		StreamFilingsPath:    "/filings?timepoint=1",
-		StreamCompaniesPath:  "/companies?timpoint=2",
-		StreamInsolvencyPath: "/insolvencies",
-		StreamChargesPath:    "/charges?timpoint=2",
-		StreamOfficersPath:   "/officers?timepoint=1",
-		StreamPSCsPath:       "/pscs",
+		StreamFilingsPath:    "/backend/filings?timepoint=1",
+		StreamCompaniesPath:  "/backend/companies?timpoint=2",
+		StreamInsolvencyPath: "/backend/insolvencies",
+		StreamChargesPath:    "/backend/charges?timpoint=2",
+		StreamOfficersPath:   "/backend/officers?timepoint=1",
+		StreamPSCsPath:       "/backend/pscs",
 	}
 	pathMapper = *New(&cfg)
 
@@ -28,9 +28,9 @@ func TestUnitGetBackendPathForPathWithFilingHistoryReturnsMappedPath(t *testing.
 	initMapperTest()
 	Convey("The provided path is for filing history", t, func() {
 		Convey("The backend path is obtained for the path", func() {
-			result, err := pathMapper.GetBackendPathForPath("/filings")
+			result, err := pathMapper.GetBackendPathForPath("/streaming-api-cache/filings")
 			Convey("The destination topic should be filing-history", func() {
-				So(result, ShouldEqual, "/filings?timepoint=1")
+				So(result, ShouldEqual, "/backend/filings?timepoint=1")
 				So(err, ShouldBeNil)
 			})
 		})
@@ -41,9 +41,9 @@ func TestUnitGetBackendPathForPathWithCompanyProfileReturnsMappedPath(t *testing
 	initMapperTest()
 	Convey("The provided path is for company profile", t, func() {
 		Convey("The backend path is obtained for the path", func() {
-			result, err := pathMapper.GetBackendPathForPath("/companies")
+			result, err := pathMapper.GetBackendPathForPath("/streaming-api-cache/companies")
 			Convey("The destination topic should be filing-history", func() {
-				So(result, ShouldEqual, "/companies?timpoint=2")
+				So(result, ShouldEqual, "/backend/companies?timpoint=2")
 				So(err, ShouldBeNil)
 			})
 		})
@@ -54,9 +54,9 @@ func TestUnitGetBackendPathForPathWithCompanyInsolvencyReturnsMappedPath(t *test
 	initMapperTest()
 	Convey("The provided path is for company insolvency", t, func() {
 		Convey("The backend path is obtained for the path", func() {
-			result, err := pathMapper.GetBackendPathForPath("/insolvency-cases")
+			result, err := pathMapper.GetBackendPathForPath("/streaming-api-cache/insolvency-cases")
 			Convey("The destination topic should be company insolvency", func() {
-				So(result, ShouldEqual, "/insolvencies")
+				So(result, ShouldEqual, "/backend/insolvencies")
 				So(err, ShouldBeNil)
 			})
 		})
@@ -67,9 +67,9 @@ func TestUnitGetBackendPathForPathWithCompanyChargesReturnsMappedPath(t *testing
 	initMapperTest()
 	Convey("The provided path is for company charges", t, func() {
 		Convey("The backend path is obtained for the path", func() {
-			result, err := pathMapper.GetBackendPathForPath("/charges")
+			result, err := pathMapper.GetBackendPathForPath("/streaming-api-cache/charges")
 			Convey("The destination topic should be company charges", func() {
-				So(result, ShouldEqual, "/charges?timpoint=2")
+				So(result, ShouldEqual, "/backend/charges?timpoint=2")
 				So(err, ShouldBeNil)
 			})
 		})
@@ -79,9 +79,9 @@ func TestUnitGetBackendPathForPathWithCompanyOfficersReturnsMappedPath(t *testin
 	initMapperTest()
 	Convey("The provided path is for company officers", t, func() {
 		Convey("The backend path is obtained for the path", func() {
-			result, err := pathMapper.GetBackendPathForPath("/officers")
+			result, err := pathMapper.GetBackendPathForPath("/streaming-api-cache/officers")
 			Convey("The destination topic should be company officers", func() {
-				So(result, ShouldEqual, "/officers?timepoint=1")
+				So(result, ShouldEqual, "/backend/officers?timepoint=1")
 				So(err, ShouldBeNil)
 			})
 		})
@@ -92,9 +92,9 @@ func TestUnitGetBackendPathForPathWithCompanyPSCsReturnsMappedPath(t *testing.T)
 	initMapperTest()
 	Convey("The provided path is for company officers", t, func() {
 		Convey("The backend path is obtained for the path", func() {
-			result, err := pathMapper.GetBackendPathForPath("/persons-with-significant-control")
+			result, err := pathMapper.GetBackendPathForPath("/streaming-api-cache/persons-with-significant-control")
 			Convey("The destination topic should be company officers", func() {
-				So(result, ShouldEqual, "/pscs")
+				So(result, ShouldEqual, "/backend/pscs")
 				So(err, ShouldBeNil)
 			})
 		})

@@ -6,17 +6,18 @@ import (
 )
 
 const (
-	FilingHistoryPath = "/filings"
-	CompaniesPath     = "/companies"
-	InsolvencyPath    = "/insolvency-cases"
-	ChargesPath       = "/charges"
-	OfficersPath      = "/officers"
-	PSCsPath          = "/persons-with-significant-control"
+	servicePrefix     = "/streaming-api-cache"
+	FilingHistoryPath = servicePrefix + "/filings"
+	CompaniesPath     = servicePrefix + "/companies"
+	InsolvencyPath    = servicePrefix + "/insolvency-cases"
+	ChargesPath       = servicePrefix + "/charges"
+	OfficersPath      = servicePrefix + "/officers"
+	PSCsPath          = servicePrefix + "/persons-with-significant-control"
 )
 
 //A topic mapper that obtains topics for the specified resource kind from the app configuration model
 type ConfigurationPathMapper struct {
-	Paths       map[string]string
+	Paths        map[string]string
 	DefaultTopic string
 }
 

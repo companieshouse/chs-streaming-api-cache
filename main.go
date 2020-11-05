@@ -17,6 +17,7 @@ const (
 	companyChargesStream    = "stream-company-charges"
 	companyOfficersStream   = "stream-company-officers"
 	companyPSCStream        = "stream-company-psc"
+	servicePrefix           = "/streaming-api-cache"
 )
 
 func main() {
@@ -33,12 +34,12 @@ func main() {
 		Router:        svc.Router(),
 	}
 
-	service.NewCacheService(cacheConfiguration).WithTopic(filingHistoryStream).WithPath("/filings").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyProfileStream).WithPath("/companies").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyInsolvencyStream).WithPath("/insolvency-cases").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyChargesStream).WithPath("/charges").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyOfficersStream).WithPath("/officers").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyPSCStream).WithPath("/persons-with-significant-control").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(filingHistoryStream).WithPath(servicePrefix + "/filings").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyProfileStream).WithPath(servicePrefix + "/companies").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyInsolvencyStream).WithPath(servicePrefix + "/insolvency-cases").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyChargesStream).WithPath(servicePrefix + "/charges").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyOfficersStream).WithPath(servicePrefix + "/officers").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyPSCStream).WithPath(servicePrefix + "/persons-with-significant-control").Initialise().Start()
 
 	svc.Router().Path("/healthcheck").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
