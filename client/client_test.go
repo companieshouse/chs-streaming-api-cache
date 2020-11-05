@@ -23,8 +23,8 @@ type mockHttpClient struct {
 	mock.Mock
 }
 
-func (c *mockHttpClient) Get(url string) (resp *http.Response, err error) {
-	args := c.Called(url)
+func (c *mockHttpClient) Do(req *http.Request) (resp *http.Response, err error) {
+	args := c.Called(req)
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
@@ -68,7 +68,7 @@ func (b *mockBody) Close() error {
 
 func TestNewClient(t *testing.T) {
 	Convey("given a new client instance is created", t, func() {
-		actual := NewClient("baseurl", "path", &broker.Broker{}, &http.Client{}, &mockCacheService{}, "key", &mockLogger{})
+		actual := NewClient("baseurl", "path", &broker.Broker{}, &http.Client{}, "username", &mockCacheService{}, "key", &mockLogger{})
 		Convey("then a new client should be created", func() {
 			So(actual, ShouldNotBeNil)
 			So(actual.baseurl, ShouldEqual, "baseurl")
@@ -83,14 +83,14 @@ func TestPublishToBroker(t *testing.T) {
 		broker := &mockBroker{}
 		broker.On("Publish", mock.Anything).Return()
 		httpClient := &mockHttpClient{}
-		httpClient.On("Get", mock.Anything).Return(&http.Response{StatusCode: 200,
+		httpClient.On("Do", mock.Anything).Return(&http.Response{StatusCode: 200,
 			Body: &mockBody{strings.NewReader("{\"data\":\"{\\\"greetings\\\":\\\"hello\\\"}\",\"offset\":43}\n")},
 		}, nil)
 		service := &mockCacheService{}
 		service.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		logger := &mockLogger{}
 		logger.On("Error", mock.Anything).Return(nil)
-		client := NewClient("baseurl", "path", broker, httpClient, service, "key", logger)
+		client := NewClient("baseurl", "path", broker, httpClient, "username", service, "key", logger)
 		client.wg = new(sync.WaitGroup)
 		Convey("when a new message is published", func() {
 			client.wg.Add(1)

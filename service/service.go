@@ -22,6 +22,7 @@ type CacheService struct {
 	topic      string
 	path       string
 	backendURL string
+	username   string
 	redisCfg   RedisConfig
 	myMapper   *mapper.ConfigurationPathMapper
 }
@@ -46,6 +47,7 @@ func NewCacheService(cfg *CacheConfiguration) *CacheService {
 		broker:     broker.NewBroker(),
 		router:     cfg.Router,
 		backendURL: cfg.Configuration.BackEndUrl,
+		username:   cfg.Configuration.ChsApiKey,
 		redisCfg: RedisConfig{
 			redisUrl:        cfg.Configuration.RedisUrl,
 			expiryInSeconds: cfg.Configuration.CacheExpiryInSeconds,
@@ -85,6 +87,7 @@ func (s *CacheService) Initialise() *CacheService {
 		backendPath,
 		s.broker,
 		http.DefaultClient,
+		s.username,
 		cacheClient,
 		s.topic,
 		logger.NewLogger())

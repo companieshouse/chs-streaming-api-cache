@@ -7,6 +7,7 @@ type Config struct {
 	BindAddress          string      `env:"BIND_ADDRESS"                    flag:"bind-address"`
 	CertFile             string      `env:"CERT_FILE"                       flag:"cert-file"`
 	KeyFile              string      `env:"KEY_FILE"                        flag:"key-file"`
+	ChsApiKey            string      `env:"CHS_API_KEY"                     flag:"chs-api-key"`
 	BackEndUrl           string      `env:"STREAMING_BACKEND_URL"           flag:"streaming_backend_url"`
 	RedisUrl             string      `env:"REDIS_URL"                       flag:"redis-url"`
 	RedisPoolSize        int         `env:"REDIS_POOL_SIZE"                 flag:"redis_pool_size"`
