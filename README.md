@@ -30,9 +30,10 @@ REDIS_URL|The URL of the Redis cache|redis:6379|yes
 STREAMING_BACKEND_URL|The URL of the CH Streaming Backend service|http://chs-streaming-api-backend:6000|yes
 REDIS_POOL_SIZE|The number of connections in a Redis connection pool|10|yes
 CACHE_EXPIRY_IN_SECONDS|The number of seconds before a offset cache entry expires|3600|yes
-STREAM_BACKEND_FILINGS_PATH|The backend endpoint to stream filing history offsets|/filings|yes
-STREAM_BACKEND_COMPANIES_PATH|The backend endpoint to stream filing history offsets|/companies?timepoint=2|yes
-STREAM_BACKEND_INSOLVENCY_PATH|The backend endpoint to stream company insolvency offsets|/insolvency-cases|yes
-STREAM_BACKEND_CHARGES_PATH|The backend endpoint to stream company charges offsets|/charges|yes
-STREAM_BACKEND_OFFICERS_PATH|The backend endpoint to stream officer appointments offsets|/officers|yes
-STREAM_BACKEND_PSCS_PATH|The backend endpoint to stream PSC offsets|/persons-with-significant-control|yes
+STREAM_BACKEND_FILINGS_PATH|The backend endpoint to stream filing history offsets|/streaming-api-backend/filings|yes
+STREAM_BACKEND_COMPANIES_PATH|The backend endpoint to stream filing history offsets|/streaming-api-backend/companies?timepoint=2|yes
+STREAM_BACKEND_INSOLVENCY_PATH|The backend endpoint to stream company insolvency offsets|/streaming-api-backend/insolvency-cases|yes
+STREAM_BACKEND_CHARGES_PATH|The backend endpoint to stream company charges offsets|/streaming-api-backend/charges|yes
+STREAM_BACKEND_OFFICERS_PATH|The backend endpoint to stream officer appointments offsets|/streaming-api-backend/officers|yes
+STREAM_BACKEND_PSCS_PATH|The backend endpoint to stream PSC offsets|/streaming-api-backend/persons-with-significant-control|yes
+CHS_API_KEY|The key used for basic authenication in http requests|abc123|yes
