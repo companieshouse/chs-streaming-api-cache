@@ -16,7 +16,7 @@ const (
 
 //A topic mapper that obtains topics for the specified resource kind from the app configuration model
 type ConfigurationPathMapper struct {
-	Paths       map[string]string
+	Paths        map[string]string
 	DefaultTopic string
 }
 

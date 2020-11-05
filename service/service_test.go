@@ -45,5 +45,3 @@ func TestBindTopic(t *testing.T) {
 		})
 	})
 }
-
-
