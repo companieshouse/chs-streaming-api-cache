@@ -15,7 +15,8 @@ type Client struct {
 	baseurl      string
 	path         string
 	broker       Publishable
-	httpClient   Gettable
+	httpClient   Doable
+	username     string
 	cacheService Cacheable
 	key          string
 	logger       logger.Logger
@@ -26,8 +27,8 @@ type Publishable interface {
 	Publish(msg string)
 }
 
-type Gettable interface {
-	Get(url string) (resp *http.Response, err error)
+type Doable interface {
+	Do(req *http.Request) (resp *http.Response, err error)
 }
 
 //The result of the operation.
@@ -36,12 +37,13 @@ type Result struct {
 	Offset int64  `json:"offset"`
 }
 
-func NewClient(baseurl string, path string, broker Publishable, client Gettable, service Cacheable, key string, logger logger.Logger) *Client {
+func NewClient(baseurl string, path string, broker Publishable, client Doable, username string, service Cacheable, key string, logger logger.Logger) *Client {
 	return &Client{
 		baseurl:      baseurl,
 		path:         path,
 		broker:       broker,
 		httpClient:   client,
+		username:     username,
 		cacheService: service,
 		key:          key,
 		logger:       logger,
@@ -51,7 +53,9 @@ func NewClient(baseurl string, path string, broker Publishable, client Gettable,
 
 func (c *Client) Connect() {
 	url := c.baseurl + c.path
-	resp, err := c.httpClient.Get(url)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.SetBasicAuth(c.username, "")
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		c.logger.Error(err, log.Data{})
 		panic(err)
