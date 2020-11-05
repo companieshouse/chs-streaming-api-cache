@@ -17,6 +17,7 @@ const (
 	companyChargesStream    = "stream-company-charges"
 	companyOfficersStream   = "stream-company-officers"
 	companyPSCStream        = "stream-company-psc"
+	servicePrefix           = "/streaming-api-cache"
 )
 
 func main() {
@@ -33,12 +34,12 @@ func main() {
 		Router:        svc.Router(),
 	}
 
-	service.NewCacheService(cacheConfiguration).WithTopic(filingHistoryStream).WithPath("/streaming-api-cache/filings").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyProfileStream).WithPath("/streaming-api-cache/companies").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyInsolvencyStream).WithPath("/streaming-api-cache/insolvency-cases").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyChargesStream).WithPath("/streaming-api-cache/charges").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyOfficersStream).WithPath("/streaming-api-cache/officers").Initialise().Start()
-	service.NewCacheService(cacheConfiguration).WithTopic(companyPSCStream).WithPath("/streaming-api-cache/persons-with-significant-control").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(filingHistoryStream).WithPath(servicePrefix + "/filings").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyProfileStream).WithPath(servicePrefix + "/companies").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyInsolvencyStream).WithPath(servicePrefix + "/insolvency-cases").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyChargesStream).WithPath(servicePrefix + "/charges").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyOfficersStream).WithPath(servicePrefix + "/officers").Initialise().Start()
+	service.NewCacheService(cacheConfiguration).WithTopic(companyPSCStream).WithPath(servicePrefix + "/persons-with-significant-control").Initialise().Start()
 
 	svc.Router().Path("/healthcheck").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
