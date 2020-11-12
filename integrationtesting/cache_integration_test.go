@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
-    "github.com/companieshouse/chs-streaming-api-cache/cache"
+	"github.com/companieshouse/chs-streaming-api-cache/cache"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"

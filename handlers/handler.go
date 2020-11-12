@@ -38,7 +38,7 @@ func (h *RequestHandler) HandleRequest(writer http.ResponseWriter, request *http
 	offset := request.URL.Query().Get("timepoint")
 	o, err := h.offset.Parse(offset)
 	if err != nil {
-		h.logger.Info("Invalid offset requested", log.Data{"error": err, "offset":offset })
+		h.logger.Info("Invalid offset requested", log.Data{"error": err, "offset": offset})
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -63,7 +63,7 @@ func (h *RequestHandler) processOffset(writer http.ResponseWriter, o int64) {
 		return
 	}
 	for _, delta := range deltas {
-		_, _ = writer.Write([]byte(delta+"\n"))
+		_, _ = writer.Write([]byte(delta + "\n"))
 		writer.(http.Flusher).Flush()
 		if h.wg != nil {
 			h.wg.Done()
@@ -78,7 +78,7 @@ func (h *RequestHandler) processHttp(writer http.ResponseWriter, request *http.R
 	for {
 		select {
 		case msg := <-subscription:
-			_, _ = writer.Write([]byte(msg+"\n"))
+			_, _ = writer.Write([]byte(msg + "\n"))
 			writer.(http.Flusher).Flush()
 			if h.wg != nil {
 				h.wg.Done()
