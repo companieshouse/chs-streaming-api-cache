@@ -15,13 +15,13 @@ const (
 	PSCsPath          = servicePrefix + "/persons-with-significant-control"
 )
 
-//A topic mapper that obtains topics for the specified resource kind from the app configuration model
+// A topic mapper that obtains topics for the specified resource kind from the app configuration model
 type ConfigurationPathMapper struct {
 	Paths        map[string]string
 	DefaultTopic string
 }
 
-//Create a new ConfigurationPathMapper instance with all backend path mappings resolved from configuration
+// Create a new ConfigurationPathMapper instance with all backend path mappings resolved from configuration
 func New(cfg *config.Config) *ConfigurationPathMapper {
 	mapper := &ConfigurationPathMapper{}
 	mapper.Paths = map[string]string{
@@ -35,7 +35,7 @@ func New(cfg *config.Config) *ConfigurationPathMapper {
 	return mapper
 }
 
-//Obtain a backend path corresponding to the given stream path
+// Obtain a backend path corresponding to the given stream path
 func (mapper *ConfigurationPathMapper) GetBackendPathForPath(path string) (string, error) {
 	val, exists := mapper.Paths[path]
 	if exists {
