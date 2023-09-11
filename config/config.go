@@ -1,13 +1,13 @@
 package config
 
-import "github.com/ian-kent/gofigure"
+import "github.com/companieshouse/gofigure"
 
 type Config struct {
 	gofigure             interface{} `order:"env,flag"`
 	BindAddress          string      `env:"BIND_ADDRESS"                    flag:"bind-address"`
-	CertFile             string      `env:"CERT_FILE"                       flag:"cert-file"`
-	KeyFile              string      `env:"KEY_FILE"                        flag:"key-file"`
-	ChsApiKey            string      `env:"CHS_API_KEY"                     flag:"chs-api-key"`
+	CertFile             string      `env:"CERT_FILE"                       flag:"cert-file" json:"-"`
+	KeyFile              string      `env:"KEY_FILE"                        flag:"key-file" json:"-"`
+	ChsApiKey            string      `env:"CHS_API_KEY"                     flag:"chs-api-key" json:"-"`
 	BackEndUrl           string      `env:"STREAMING_BACKEND_URL"           flag:"streaming_backend_url"`
 	RedisUrl             string      `env:"REDIS_URL"                       flag:"redis-url"`
 	RedisPoolSize        int         `env:"REDIS_POOL_SIZE"                 flag:"redis_pool_size"`
