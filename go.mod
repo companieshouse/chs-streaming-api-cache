@@ -1,6 +1,6 @@
 module github.com/companieshouse/chs-streaming-api-cache
 
-go 1.15
+go 1.19
 
 require (
 	github.com/companieshouse/chs.go v1.2.10
